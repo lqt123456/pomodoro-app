@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>番茄钟</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: transparent;
+      -webkit-app-region: no-drag;
+    }
+
+    .container {
+      width: 280px;
+      background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .status {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+
+    .timer-ring {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 20px auto;
+    }
+
+    .ring-bg {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .ring-progress {
+      position: absolute;
+      inset: 8px;
+      border-radius: 50%;
+      background: conic-gradient(
+        white var(--progress, 0%),
+        rgba(255, 255, 255, 0.1) var(--progress, 0%)
+      );
+    }
+
+    .time-display {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .time {
+      font-size: 42px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cycle-info {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    button {
+      -webkit-app-region: no-drag;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      transition: transform 0.15s, box-shadow 0.15s;
+      background: white;
+      color: #ff6b6b;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    button:hover {
+      transform: scale(1.1);
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    .btn-start { background: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 id="modeLabel">工作</h1>
+      <div class="status" id="statusText">点击开始专注</div>
+    </div>
+
+    <div class="timer-ring">
+      <div class="ring-bg"></div>
+      <div class="ring-progress" id="progressRing"></div>
+      <div class="time-display">
+        <div class="time" id="timeDisplay">25:00</div>
+        <div class="cycle-info" id="cycleInfo">第 0 个番茄</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-start" id="startBtn" title="开始">▶</button>
+      <button id="pauseBtn" title="暂停">⏸</button>
+      <button id="resetBtn" title="重置">↺</button>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    let isRunning = false;
+
+    ipcRenderer.on('update', (e, data) => {
+      document.getElementById('timeDisplay').textContent = data.time;
+      document.getElementById('modeLabel').textContent = data.isWork ? '工作' : '休息';
+      document.getElementById('cycleInfo').textContent = `第 ${data.cycles} 个番茄`;
+      document.getElementById('progressRing').style.setProperty('--progress', `${data.progress * 100}%`);
+
+      const startBtn = document.getElementById('startBtn');
+      startBtn.textContent = data.isRunning ? '▶' : '⏸';
+      startBtn.onclick = () => data.isRunning ? ipcRenderer.send('pause') : ipcRenderer.send('start');
+
+      document.getElementById('statusText').textContent = data.isRunning
+        ? (data.isWork ? '专注工作中...' : '休息一下~')
+        : '点击开始专注';
+
+      isRunning = data.isRunning;
+    });
+
+    document.getElementById('startBtn').onclick = () => {
+      ipcRenderer.send(isRunning ? 'pause' : 'start');
+    };
+
+    document.getElementById('pauseBtn').onclick = () => ipcRenderer.send('pause');
+    document.getElementById('resetBtn').onclick = () => ipcRenderer.send('reset');
+  </script>
+</body>
+</html>

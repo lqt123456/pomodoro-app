@@ -1,0 +1,19 @@
+{
+  "name": "pomodoro-app",
+  "version": "1.0.0",
+  "description": "番茄钟桌面应用",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "pomodoro",
+    "timer"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^33.4.11"
+  }
+}
